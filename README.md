@@ -33,24 +33,38 @@
 
 1. リポジトリをクローン
 ```bash
-git clone <repository-url>
-cd recommend_vtuber
+git clone https://github.com/forblgac/nijisanji-vtuber-recommend.git
+cd nijisanji-vtuber-recommend
 ```
 
-2. 依存関係をインストール
+2. Python依存関係をインストール
 ```bash
 uv sync
 ```
 
-3. アプリケーションを起動
+3. MCPサーバーをセットアップ（オプション）
+```bash
+cd mcp-server
+npm install
+npm run build
+cd ..
+```
+
+4. アプリケーションを起動
 ```bash
 uv run python app.py
 ```
 
-4. ブラウザでアクセス
+5. ブラウザでアクセス
 ```
 http://localhost:8080
 ```
+
+### MCPサーバーについて
+
+MCPサーバーはオプションの機能です。基本的な推薦システム（10名のライバー）は、MCPサーバーなしでも動作します。
+
+MCPサーバーを使用すると、にじさんじwikiから最新のライバー情報（173名+）を取得できます。
 
 ## 使用方法
 

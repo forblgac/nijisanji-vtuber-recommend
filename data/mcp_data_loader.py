@@ -10,8 +10,12 @@ class MCPDataLoader:
     """MCPサーバーからにじさんじライバーデータを取得するクラス"""
 
     def __init__(self):
-        self.mcp_server_path = (
-            "/Users/light/Documents/Cline/MCP/nijisanji-wiki-server/build/index.js"
+        import os
+
+        # プロジェクトのルートディレクトリを取得
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.mcp_server_path = os.path.join(
+            project_root, "mcp-server", "build", "index.js"
         )
 
     def call_mcp_tool(
