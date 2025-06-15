@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>にじさんじJP Vtuber推薦システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <style>
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50" x-data="vtuberApp()">
+    <!-- ヘッダー -->
+    <header class="gradient-bg text-white shadow-lg">
+      <div class="container mx-auto px-6 py-8">
+        <h1 class="text-4xl font-bold text-center mb-2">にじさんじJP</h1>
+        <h2 class="text-2xl text-center opacity-90">Vtuber推薦システム</h2>
+        <p class="text-center mt-4 opacity-80">
+          あなたの好みに合うライバーを見つけましょう
+        </p>
+      </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+      <!-- 推薦システム -->
+      <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <h3 class="text-2xl font-bold mb-6 text-gray-800">
+          好みを選択してください
+        </h3>
+
+        <form @submit.prevent="getRecommendations" class="space-y-6">
+          <!-- 配信ジャンル選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >好きな配信ジャンル</label
+            >
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <template x-for="genre in streamingGenres" :key="genre">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :value="genre"
+                    x-model="preferences.streaming_genre"
+                    class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span x-text="genre" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- ゲームジャンル選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >好きなゲームジャンル</label
+            >
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <template x-for="genre in gameGenres" :key="genre">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :value="genre"
+                    x-model="preferences.game_genre"
+                    class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span x-text="genre" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- 配信時間選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >よく見る時間帯</label
+            >
+            <div class="flex space-x-4">
+              <template x-for="time in streamingTimes" :key="time">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    :value="time"
+                    x-model="preferences.streaming_time"
+                    class="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                  />
+                  <span x-text="time" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- 性別選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >好みの性別</label
+            >
+            <div class="flex space-x-4">
+              <template x-for="gender in genders" :key="gender">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    :value="gender"
+                    x-model="preferences.gender"
+                    class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+                  />
+                  <span x-text="gender" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- 声質選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >好みの声質</label
+            >
+            <div class="flex space-x-4">
+              <template x-for="voice in voiceTypes" :key="voice">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    :value="voice"
+                    x-model="preferences.voice_type"
+                    class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                  />
+                  <span x-text="voice" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- 性格特性選択 -->
+          <div>
+            <label class="block text-lg font-semibold text-gray-700 mb-3"
+              >好みの性格</label
+            >
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <template x-for="trait in personalityTraits" :key="trait">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :value="trait"
+                    x-model="preferences.personality"
+                    class="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                  />
+                  <span x-text="trait" class="text-gray-700"></span>
+                </label>
+              </template>
+            </div>
+          </div>
+
+          <!-- 推薦ボタン -->
+          <div class="text-center space-y-4">
+            <button
+              type="submit"
+              class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition duration-200 shadow-lg"
+              :disabled="loading"
+            >
+              <span x-show="!loading">おすすめライバーを見つける</span>
+              <span x-show="loading">検索中...</span>
+            </button>
+
+            <!-- MCPデータ取得ボタン -->
+            <div class="mt-4">
+              <button
+                type="button"
+                @click="loadMcpData"
+                class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-2 rounded-lg font-medium hover:from-green-600 hover:to-teal-700 transform hover:scale-105 transition duration-200 shadow-md"
+                :disabled="mcpLoading"
+              >
+                <span x-show="!mcpLoading">最新ライバーデータを取得</span>
+                <span x-show="mcpLoading">データ取得中...</span>
+              </button>
+              <p class="text-sm text-gray-600 mt-2">
+                にじさんじwikiから最新のライバー情報を取得します
+              </p>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- 推薦結果 -->
+      <div
+        x-show="recommendations.length > 0"
+        class="bg-white rounded-lg shadow-lg p-8"
+      >
+        <h3 class="text-2xl font-bold mb-6 text-gray-800">
+          あなたにおすすめのライバー
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <template x-for="vtuber in recommendations" :key="vtuber.name">
+            <div
+              class="bg-gradient-to-br from-white to-gray-50 rounded-lg p-6 shadow-md card-hover border border-gray-200"
+            >
+              <div class="text-center mb-4">
+                <h4
+                  class="text-xl font-bold text-gray-800 mb-2"
+                  x-text="vtuber.name"
+                ></h4>
+                <div
+                  class="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                  :style="`background: linear-gradient(135deg, ${getAvatarColor(vtuber.avatar_color_theme)})`"
+                  x-text="vtuber.name.charAt(0)"
+                ></div>
+              </div>
+
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">性別:</span>
+                  <span x-text="vtuber.gender" class="font-medium"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">声質:</span>
+                  <span x-text="vtuber.voice_type" class="font-medium"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">配信時間:</span>
+                  <span
+                    x-text="vtuber.main_streaming_time"
+                    class="font-medium"
+                  ></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">登録者数:</span>
+                  <span
+                    x-text="formatNumber(vtuber.subscriber_count)"
+                    class="font-medium"
+                  ></span>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <p class="text-gray-600 text-sm mb-2">配信ジャンル:</p>
+                <div class="flex flex-wrap gap-1">
+                  <template
+                    x-for="genre in vtuber.streaming_genres"
+                    :key="genre"
+                  >
+                    <span
+                      class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                      x-text="genre"
+                    ></span>
+                  </template>
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <p class="text-gray-600 text-sm mb-2">性格:</p>
+                <div class="flex flex-wrap gap-1">
+                  <template
+                    x-for="trait in vtuber.personality_traits"
+                    :key="trait"
+                  >
+                    <span
+                      class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs"
+                      x-text="trait"
+                    ></span>
+                  </template>
+                </div>
+              </div>
+
+              <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div class="bg-red-50 p-2 rounded">
+                  <div class="text-xs text-gray-600">歌唱</div>
+                  <div
+                    class="font-bold text-red-600"
+                    x-text="vtuber.singing_skill + '/10'"
+                  ></div>
+                </div>
+                <div class="bg-green-50 p-2 rounded">
+                  <div class="text-xs text-gray-600">ゲーム</div>
+                  <div
+                    class="font-bold text-green-600"
+                    x-text="vtuber.gaming_skill + '/10'"
+                  ></div>
+                </div>
+                <div class="bg-blue-50 p-2 rounded">
+                  <div class="text-xs text-gray-600">トーク</div>
+                  <div
+                    class="font-bold text-blue-600"
+                    x-text="vtuber.talk_skill + '/10'"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- エラーメッセージ -->
+      <div
+        x-show="error"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+      >
+        <span x-text="error"></span>
+      </div>
+    </div>
+
+    <script>
+      function vtuberApp() {
+        return {
+          loading: false,
+          mcpLoading: false,
+          error: "",
+          recommendations: [],
+          preferences: {
+            streaming_genre: [],
+            game_genre: [],
+            streaming_time: "",
+            gender: "",
+            voice_type: "",
+            personality: [],
+          },
+
+          // 選択肢データ
+          streamingGenres: ["雑談", "ゲーム", "歌", "ASMR", "お絵描き", "企画"],
+          gameGenres: [
+            "FPS",
+            "RPG",
+            "アクション",
+            "パズル",
+            "シミュレーション",
+            "格闘",
+            "ホラー",
+            "カジュアル",
+            "音ゲー",
+            "パーティ",
+            "バラエティ",
+            "レトロ",
+            "スポーツ",
+            "アドベンチャー",
+            "戦略",
+          ],
+          streamingTimes: ["昼", "夕方", "夜"],
+          genders: ["女性", "男性", "どちらでも"],
+          voiceTypes: ["高音", "中音", "低音", "特殊", "どれでも"],
+          personalityTraits: [
+            "しっかり者",
+            "ツッコミ",
+            "知的",
+            "おっとり",
+            "天然",
+            "優しい",
+            "冷静",
+            "分析的",
+            "紳士",
+            "お姉さん",
+            "落ち着いている",
+            "元気",
+            "明るい",
+            "ギャル",
+            "面白い",
+            "ボケ",
+            "親しみやすい",
+            "癒し系",
+            "活発",
+            "ポジティブ",
+            "個性的",
+            "ユニーク",
+            "愛らしい",
+            "クール",
+            "大人",
+          ],
+
+          async getRecommendations() {
+            this.loading = true;
+            this.error = "";
+
+            try {
+              // 'どちらでも'や'どれでも'は空文字に変換
+              const cleanPreferences = {
+                ...this.preferences,
+                gender:
+                  this.preferences.gender === "どちらでも"
+                    ? ""
+                    : this.preferences.gender,
+                voice_type:
+                  this.preferences.voice_type === "どれでも"
+                    ? ""
+                    : this.preferences.voice_type,
+              };
+
+              const response = await fetch("/api/recommend", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(cleanPreferences),
+              });
+
+              if (!response.ok) {
+                throw new Error("推薦の取得に失敗しました");
+              }
+
+              this.recommendations = await response.json();
+
+              if (this.recommendations.length === 0) {
+                this.error =
+                  "条件に合うライバーが見つかりませんでした。条件を変更してもう一度お試しください。";
+              }
+            } catch (err) {
+              this.error = err.message;
+            } finally {
+              this.loading = false;
+            }
+          },
+
+          async loadMcpData() {
+            this.mcpLoading = true;
+            this.error = "";
+
+            try {
+              const response = await fetch("/api/load_mcp_data", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              const result = await response.json();
+
+              if (response.ok && result.success) {
+                // 成功メッセージを表示
+                alert(`成功: ${result.message}`);
+                // 推薦結果をクリア
+                this.recommendations = [];
+              } else {
+                throw new Error(result.message || "データ取得に失敗しました");
+              }
+            } catch (err) {
+              this.error = `MCPデータ取得エラー: ${err.message}`;
+            } finally {
+              this.mcpLoading = false;
+            }
+          },
+
+          formatNumber(num) {
+            return num.toLocaleString();
+          },
+
+          getAvatarColor(colorTheme) {
+            const colorMap = {
+              "白・青": "#3B82F6, #93C5FD",
+              "緑・茶": "#10B981, #84CC16",
+              "黒・青": "#1E40AF, #3730A3",
+              "紫・白": "#8B5CF6, #E5E7EB",
+              "ピンク・白": "#EC4899, #F9A8D4",
+              "青・白": "#2563EB, #DBEAFE",
+              "白・水色": "#06B6D4, #A5F3FC",
+              "オレンジ・白": "#F97316, #FED7AA",
+              "赤・黒": "#DC2626, #374151",
+              "灰・黒": "#6B7280, #374151",
+            };
+            return colorMap[colorTheme] || "#6B7280, #9CA3AF";
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
